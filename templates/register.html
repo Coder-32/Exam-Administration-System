@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - Exam Invigilation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .registration-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 244, 248, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #2c3e50;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .registration-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(52, 152, 219, 0.02);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .registration-section h2 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            color: #2c3e50;
+            position: relative;
+            z-index: 1;
+        }
+
+        .registration-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .registration-form input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e1e8f0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            color: #2c3e50;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .registration-form input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.2);
+            background: white;
+        }
+
+        .registration-form input::placeholder {
+            color: #999;
+        }
+
+        .registration-form button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .registration-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .list-container {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 2px solid #e1e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            background: rgba(240, 244, 248, 0.7);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e1e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.1);
+        }
+
+
+        /* Enhanced Staff Section Styling */
+        .staff-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .staff-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .staff-form-section {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .staff-form-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .staff-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .staff-input-group input {
+            flex: 1;
+            padding: 0.85rem;
+            border: 2px solid #e1e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .staff-input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 12px rgba(52, 152, 219, 0.25);
+        }
+
+        .staff-input-group button {
+            padding: 0.85rem 1.5rem;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            white-space: nowrap;
+        }
+
+        .staff-input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+        }
+
+        .staff-input-group button:active {
+            transform: translateY(0);
+        }
+
+        .staff-list-section {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.08) 0%, rgba(52, 152, 219, 0.02) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(52, 152, 219, 0.15);
+            height: 100%;
+        }
+
+        .staff-list-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .staff-members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .staff-members-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .staff-members-list::-webkit-scrollbar-track {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+        }
+
+        .staff-members-list::-webkit-scrollbar-thumb {
+            background: rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+        }
+
+        .staff-members-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(52, 152, 219, 0.5);
+        }
+
+        .staff-member-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 1rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .staff-member-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+            border-left-color: #2980b9;
+        }
+
+        .staff-member-name {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .staff-member-name::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #27ae60;
+            display: inline-block;
+        }
+
+        .staff-delete-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 0.95rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.25);
+        }
+
+        .staff-delete-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.35);
+        }
+
+        .staff-delete-btn:active {
+            transform: scale(0.98);
+        }
+
+        .staff-empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #95a5a6;
+        }
+
+        .staff-empty-state svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .staff-empty-state p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .staff-count-badge {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        /* Faculty/Teachers Section (same pattern as staff) */
+        .faculty-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .faculty-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .faculty-form-section {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.05) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(155, 89, 182, 0.2);
+        }
+
+        .faculty-form-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .faculty-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .faculty-input-group input {
+            flex: 1;
+            padding: 0.85rem;
+            border: 2px solid #e1e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .faculty-input-group input:focus {
+            outline: none;
+            border-color: #9b59b6;
+            box-shadow: 0 0 12px rgba(155, 89, 182, 0.25);
+        }
+
+        .faculty-input-group button {
+            padding: 0.85rem 1.5rem;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+            white-space: nowrap;
+        }
+
+        .faculty-input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(155, 89, 182, 0.4);
+        }
+
+        .faculty-input-group button:active {
+            transform: translateY(0);
+        }
+
+        .faculty-list-section {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.08) 0%, rgba(155, 89, 182, 0.02) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(155, 89, 182, 0.15);
+            height: 100%;
+        }
+
+        .faculty-list-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .faculty-members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .faculty-members-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .faculty-members-list::-webkit-scrollbar-track {
+            background: rgba(155, 89, 182, 0.1);
+            border-radius: 10px;
+        }
+
+        .faculty-members-list::-webkit-scrollbar-thumb {
+            background: rgba(155, 89, 182, 0.3);
+            border-radius: 10px;
+        }
+
+        .faculty-members-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(155, 89, 182, 0.5);
+        }
+
+        .faculty-member-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 1rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #9b59b6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        .faculty-member-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(155, 89, 182, 0.15);
+            border-left-color: #8e44ad;
+        }
+
+        .faculty-member-name {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .faculty-member-name::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9b59b6;
+            display: inline-block;
+        }
+
+        .faculty-delete-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 0.95rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.25);
+        }
+
+        .faculty-delete-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.35);
+        }
+
+        .faculty-delete-btn:active {
+            transform: scale(0.98);
+        }
+
+        .faculty-empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #95a5a6;
+        }
+
+        .faculty-empty-state p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .faculty-count-badge {
+            display: inline-block;
+            background: #9b59b6;
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        /* Rooms Section (same pattern as staff) */
+        .rooms-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .rooms-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .rooms-form-section {
+            background: linear-gradient(135deg, rgba(241, 196, 15, 0.1) 0%, rgba(241, 196, 15, 0.05) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(241, 196, 15, 0.2);
+        }
+
+        .rooms-form-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rooms-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .rooms-input-group input {
+            flex: 1;
+            padding: 0.85rem;
+            border: 2px solid #e1e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .rooms-input-group input:focus {
+            outline: none;
+            border-color: #f1c40f;
+            box-shadow: 0 0 12px rgba(241, 196, 15, 0.25);
+        }
+
+        .rooms-input-group button {
+            padding: 0.85rem 1.5rem;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+            white-space: nowrap;
+        }
+
+        .rooms-input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+        }
+
+        .rooms-input-group button:active {
+            transform: translateY(0);
+        }
+
+        .rooms-list-section {
+            background: linear-gradient(135deg, rgba(241, 196, 15, 0.08) 0%, rgba(241, 196, 15, 0.02) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(241, 196, 15, 0.15);
+            height: 100%;
+        }
+
+        .rooms-list-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rooms-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .rooms-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .rooms-list::-webkit-scrollbar-track {
+            background: rgba(241, 196, 15, 0.1);
+            border-radius: 10px;
+        }
+
+        .rooms-list::-webkit-scrollbar-thumb {
+            background: rgba(241, 196, 15, 0.3);
+            border-radius: 10px;
+        }
+
+        .rooms-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(241, 196, 15, 0.5);
+        }
+
+        .room-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 1rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        .room-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.15);
+            border-left-color: #e67e22;
+        }
+
+        .room-name {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .room-name::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f39c12;
+            display: inline-block;
+        }
+
+        .room-delete-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 0.95rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.25);
+        }
+
+        .room-delete-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.35);
+        }
+
+        .room-delete-btn:active {
+            transform: scale(0.98);
+        }
+
+        .rooms-empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #95a5a6;
+        }
+
+        .rooms-empty-state p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .rooms-count-badge {
+            display: inline-block;
+            background: #f39c12;
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .nav-buttons {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .nav-buttons a {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .nav-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        /* Success animation */
+        @keyframes successPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
+
+        .success-animation {
+            animation: successPulse 1s ease-out;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .registration-section {
+                padding: 1.5rem;
+            }
+
+            .registration-form {
+                flex-direction: column;
+            }
+
+            .registration-form input,
+            .registration-form button {
+                width: 100%;
+            }
+        }
+        /* ── Top Navigation Bar ── */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: #1a1a2e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .nav-brand i {
+            color: #00c9a7;
+            font-size: 1.4rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link-item {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-link-item:hover {
+            color: #fff;
+        }
+
+        .nav-link-item.active {
+            color: #00c9a7;
+            border-bottom-color: #00c9a7;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e0e0e0;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info i {
+            color: #00c9a7;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.15);
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/" class="nav-brand">
+            <i class="fas fa-calendar-check"></i>
+            <span>ExamAdmin</span>
+        </a>
+        
+        <div class="nav-links">
+            <a href="/" class="nav-link-item">Dashboard</a>
+            <a href="/register" class="nav-link-item active">Resources</a>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ username }}</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="showChangePasswordModal()" class="logout-btn" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); color: #6366f1; cursor: pointer;">
+                    <i class="fas fa-key"></i> Change Password
+                </button>
+                <button onclick="deleteAccount()" class="logout-btn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; cursor: pointer;">
+                    <i class="fas fa-trash-alt"></i> Delete Account
+                </button>
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <h2 style="margin-bottom: 1.5rem; color: #fff; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-key" style="color: #6366f1;"></i> Change Password
+            </h2>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.875rem;">Old Password</label>
+                <input type="password" id="oldPassword" style="width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; color: #fff;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.875rem;">New Password</label>
+                <input type="password" id="newPassword" style="width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; color: #fff;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.875rem;">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" style="width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; color: #fff;">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="hideChangePasswordModal()" style="padding: 0.75rem 1.5rem; background: transparent; color: #94a3b8; border: none; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button onclick="submitChangePassword()" style="padding: 0.75rem 1.5rem; background: #6366f1; color: #fff; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'flex';
+        }
+
+        function hideChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+
+        async function submitChangePassword() {
+            const old_password = document.getElementById('oldPassword').value;
+            const new_password = document.getElementById('newPassword').value;
+            const confirm_password = document.getElementById('confirmNewPassword').value;
+
+            if (!old_password || !new_password || !confirm_password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (new_password !== confirm_password) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password, new_password })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    hideChangePasswordModal();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error);
+            }
+        }
+
+        async function deleteAccount() {
+            if (!confirm("⚠️ WARNING: This will permanently delete your account and ALL your saved data (teachers, staff, rooms, and schedules). This action CANNOT be undone.\n\nAre you sure you want to proceed?")) {
+                return;
+            }
+            
+            if (!confirm("FINAL CONFIRMATION: Are you absolutely sure?")) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    window.location.href = '/login';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error);
+            }
+        }
+    </script>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>📋 Registration System</h1>
+                <p style="color: #64748b;">Manage Teachers, Staff, and Exam Rooms</p>
+            </div>
+        </header>
+
+        <main>
+            <!-- Teachers Section -->
+            <section class="registration-section">
+                <h2>👨‍🏫 Teachers <span class="faculty-count-badge" id="facultyCount">0</span></h2>
+                <div class="faculty-container">
+                    <!-- Add Teacher Form -->
+                    <div class="faculty-form-section">
+                        <h3>➕ Add New Teacher</h3>
+                        <form class="faculty-input-group" onsubmit="addTeacher(event)">
+                            <input type="text" id="teacherName" placeholder="Enter full name" required>
+                            <button type="submit">Add</button>
+                        </form>
+                        <div style="font-size: 0.85rem; color: #7f8c8d; padding: 0.5rem 0;">
+                            📝 Enter the teacher's full name and click Add to register them
+                        </div>
+
+                        <div
+                            style="margin-top: 1.5rem; border-top: 1px solid rgba(155, 89, 182, 0.2); padding-top: 1rem;">
+                            <h3 style="font-size: 1.1rem;">📄 Bulk Upload via PDF</h3>
+                            <form class="faculty-input-group" onsubmit="uploadPDF(event, 'teacher', 'teacherPdfFile')">
+                                <input type="file" id="teacherPdfFile" accept=".pdf" required
+                                    style="padding: 0.6rem; font-size: 0.9rem;">
+                                <button type="submit"
+                                    style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);">Upload
+                                    List</button>
+                            </form>
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="teacherUseOcr" style="flex: none; width: auto;"> Enable OCR
+                                (for handwritten/scanned PDFs)
+                            </label>
+                            <div style="font-size: 0.85rem; color: #7f8c8d; padding: 0.2rem 0;">
+                                📝 PDF should contain a vertical list of names
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teachers List -->
+                    <div class="faculty-list-section">
+                        <h3>📋 Registered Teachers</h3>
+                        <button class="faculty-delete-btn" onclick="deleteAllTeachers()"
+                            style="width: 100%; margin-bottom: 1rem; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 0.75rem; font-size: 0.95rem;">🗑️
+                            Delete All Teachers</button>
+                        <div class="faculty-members-list" id="teachersList">
+                            {% if teachers %}
+                            {% for teacher in teachers %}
+                            <div class="faculty-member-card">
+                                <span class="faculty-member-name">{{ teacher }}</span>
+                                <button class="faculty-delete-btn"
+                                    onclick="deleteTeacher('{{ teacher }}')">Delete</button>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="faculty-empty-state">
+                                <p>👨‍🏫 No teachers registered yet</p>
+                                <p style="font-size: 0.8rem; margin-top: 0.5rem;">Add your first teacher to get started
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staff Section -->
+            <section class="registration-section">
+                <h2>👥 Staff <span class="staff-count-badge" id="staffCount">0</span></h2>
+                <div class="staff-container">
+                    <!-- Add Staff Form -->
+                    <div class="staff-form-section">
+                        <h3>➕ Add New Staff</h3>
+                        <form class="staff-input-group" onsubmit="addStaff(event)">
+                            <input type="text" id="staffName" placeholder="Enter full name" required>
+                            <button type="submit">Add</button>
+                        </form>
+                        <div style="font-size: 0.85rem; color: #7f8c8d; padding: 0.5rem 0;">
+                            📝 Enter the staff member's full name and click Add to register them
+                        </div>
+
+                        <div
+                            style="margin-top: 1.5rem; border-top: 1px solid rgba(52, 152, 219, 0.2); padding-top: 1rem;">
+                            <h3 style="font-size: 1.1rem;">📄 Bulk Upload via PDF</h3>
+                            <form class="staff-input-group" onsubmit="uploadPDF(event, 'staff', 'staffPdfFile')">
+                                <input type="file" id="staffPdfFile" accept=".pdf" required
+                                    style="padding: 0.6rem; font-size: 0.9rem;">
+                                <button type="submit"
+                                    style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);">Upload
+                                    List</button>
+                            </form>
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="staffUseOcr" style="flex: none; width: auto;"> Enable OCR
+                                (for handwritten/scanned PDFs)
+                            </label>
+                            <div style="font-size: 0.85rem; color: #7f8c8d; padding: 0.2rem 0;">
+                                📝 PDF should contain a vertical list of names
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Staff List -->
+                    <div class="staff-list-section">
+                        <h3>📋 Registered Staff</h3>
+                        <button class="staff-delete-btn" onclick="deleteAllStaff()"
+                            style="width: 100%; margin-bottom: 1rem; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 0.75rem; font-size: 0.95rem;">🗑️
+                            Delete All Staff</button>
+                        <div class="staff-members-list" id="staffList">
+                            {% if staff %}
+                            {% for staff_member in staff %}
+                            <div class="staff-member-card">
+                                <span class="staff-member-name">{{ staff_member }}</span>
+                                <button class="staff-delete-btn"
+                                    onclick="deleteStaff('{{ staff_member }}')">Delete</button>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="staff-empty-state">
+                                <p>👤 No staff members registered yet</p>
+                                <p style="font-size: 0.8rem; margin-top: 0.5rem;">Add your first staff member to get
+                                    started</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rooms Section -->
+            <section class="registration-section">
+                <h2>🏫 Rooms <span class="rooms-count-badge" id="roomsCount">0</span></h2>
+                <div class="rooms-container">
+                    <!-- Add Room Form -->
+                    <div class="rooms-form-section">
+                        <h3>➕ Add New Room</h3>
+                        <form class="rooms-input-group" onsubmit="addRoom(event)">
+                            <input type="text" id="roomName" placeholder="Enter room number/name" required>
+                            <button type="submit">Add</button>
+                        </form>
+                        <div style="font-size: 0.85rem; color: #7f8c8d; padding: 0.5rem 0;">
+                            📝 Enter the room number or name and click Add to register
+                        </div>
+                    </div>
+
+                    <!-- Rooms List -->
+                    <div class="rooms-list-section">
+                        <h3>📋 Registered Rooms</h3>
+                        <div class="rooms-list" id="roomsList">
+                            {% if rooms %}
+                            {% for room in rooms %}
+                            <div class="room-card">
+                                <span class="room-name">{{ room }}</span>
+                                <button class="room-delete-btn" onclick="deleteRoom('{{ room }}')">Delete</button>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="rooms-empty-state">
+                                <p>🏫 No rooms registered yet</p>
+                                <p style="font-size: 0.8rem; margin-top: 0.5rem;">Add your first room to get started</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <div class="nav-buttons">
+                <a href="/">🏠 Back to Scheduling</a>
+            </div>
+        </main>
+
+
+    </div>
+
+    <script>
+        async function addTeacher(event) {
+            event.preventDefault();
+            console.log('✓ addTeacher called');
+            const name = document.getElementById('teacherName').value.trim();
+            console.log('Teacher name:', name);
+            if (!name) {
+                console.log('⚠️ Empty name, returning');
+                return;
+            }
+
+            try {
+                console.log('📤 Sending POST to /api/register-teacher');
+                const response = await fetch('/api/register-teacher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+                console.log('✅ Response:', result);
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function addStaff(event) {
+            event.preventDefault();
+            console.log('✓ addStaff called');
+            const name = document.getElementById('staffName').value.trim();
+            console.log('Staff name:', name);
+            if (!name) {
+                console.log('⚠️ Empty name, returning');
+                return;
+            }
+
+            try {
+                console.log('📤 Sending POST to /api/register-staff');
+                const response = await fetch('/api/register-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+                console.log('✅ Response:', result);
+
+                if (result.success) {
+                    // Clear input
+                    document.getElementById('staffName').value = '';
+                    // Reload page to reflect changes
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function updateStaffCount() {
+            const staffList = document.getElementById('staffList');
+            if (!staffList) {
+                console.warn('⚠️ staffList element not found');
+                return;
+            }
+            const cards = staffList.querySelectorAll('.staff-member-card');
+            const count = cards.length;
+            const badge = document.getElementById('staffCount');
+            if (badge) {
+                badge.textContent = count;
+            }
+        }
+
+        function updateFacultyCount() {
+            const teachersList = document.getElementById('teachersList');
+            if (!teachersList) {
+                console.warn('⚠️ teachersList element not found');
+                return;
+            }
+            const cards = teachersList.querySelectorAll('.faculty-member-card');
+            const count = cards.length;
+            const badge = document.getElementById('facultyCount');
+            if (badge) {
+                badge.textContent = count;
+            }
+        }
+
+        function updateRoomsCount() {
+            const roomsList = document.getElementById('roomsList');
+            if (!roomsList) {
+                console.warn('⚠️ roomsList element not found');
+                return;
+            }
+            const cards = roomsList.querySelectorAll('.room-card');
+            const count = cards.length;
+            const badge = document.getElementById('roomsCount');
+            if (badge) {
+                badge.textContent = count;
+            }
+        }
+
+        // Update all counts on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('✓ Page loaded, updating counts...');
+            updateStaffCount();
+            updateFacultyCount();
+            updateRoomsCount();
+            console.log('✓ Counts updated');
+        });
+
+        async function addRoom(event) {
+            event.preventDefault();
+            console.log('✓ addRoom called');
+            const name = document.getElementById('roomName').value.trim();
+            console.log('Room name:', name);
+            if (!name) {
+                console.log('⚠️ Empty name, returning');
+                return;
+            }
+
+            try {
+                console.log('📤 Sending POST to /api/register-room');
+                const response = await fetch('/api/register-room', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+                console.log('✅ Response:', result);
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Note: Delete functions now work with the backend
+        async function deleteTeacher(name) {
+            if (!confirm(`Are you sure you want to delete teacher "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-teacher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function deleteStaff(name) {
+            if (!confirm(`Are you sure you want to delete staff "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function deleteRoom(name) {
+            if (!confirm(`Are you sure you want to delete room "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-room', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function uploadPDF(event, role, inputId) {
+            event.preventDefault();
+            const fileInput = document.getElementById(inputId);
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a PDF file first.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('role', role);
+
+            // Check if OCR is enabled
+            let useOcr = false;
+            if (role === 'teacher' && document.getElementById('teacherUseOcr')) {
+                useOcr = document.getElementById('teacherUseOcr').checked;
+            } else if (role === 'staff' && document.getElementById('staffUseOcr')) {
+                useOcr = document.getElementById('staffUseOcr').checked;
+            }
+            formData.append('use_ocr', useOcr);
+
+            const btn = event.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/upload-pdf-list', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                fileInput.value = '';
+            }
+        }
+
+        // Delete all teachers
+        async function deleteAllTeachers() {
+            if (!confirm('⚠️ Are you sure you want to delete ALL teachers? This cannot be undone!')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-all-teachers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Delete all staff
+        async function deleteAllStaff() {
+            if (!confirm('⚠️ Are you sure you want to delete ALL staff? This cannot be undone!')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-all-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

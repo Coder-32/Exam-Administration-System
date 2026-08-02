@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# Local SQLite fallback database (generated at runtime)
+database/local_schedules.db
+
+# Generated schedule outputs (runtime artifacts)
+schedule_storage/*.csv
+schedule_storage/*.pdf
+
+# Database text files with real names (optional: comment out to persist these)
+# database/teachers.txt
+# database/staffs.txt
+# database/rooms.txt

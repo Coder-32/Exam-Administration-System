@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Selectable Calendar</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f5f5f5;
+    }
+
+    .calendar {
+        width: 320px;
+        margin: 30px auto;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        background: #4788b6;
+    }
+
+    .header button {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+    .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+
+    .day {
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .day:hover {
+        background: #ddd;
+    }
+
+    .selected {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .today {
+        border: 2px solid #4CAF50;
+    }
+
+    button.main-btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border: none;
+        background: #2196F3;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .output {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    select {
+        padding: 5px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="calendar">
+
+    <div class="header">
+        <button onclick="changeMonth(-1)">◀</button>
+
+        <div>
+            <span id="monthYear"></span><br>
+            <select id="yearSelect" onchange="changeYear()"></select>
+        </div>
+
+        <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <div class="days" id="days"></div>
+
+    <button class="main-btn" onclick="sendToServer()">Send to Server</button>
+
+    <div class="output">
+        <b>Selected Dates:</b>
+        <div id="selectedDates"></div>
+    </div>
+</div>
+
+<script>
+    const daysContainer = document.getElementById("days");
+    const monthYear = document.getElementById("monthYear");
+    const selectedDatesDiv = document.getElementById("selectedDates");
+    const yearSelect = document.getElementById("yearSelect");
+
+    let selectedDates = [];
+
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Populate year dropdown
+    for (let y = 2000; y <= 2100; y++) {
+        let option = document.createElement("option");
+        option.value = y;
+        option.text = y;
+        if (y === currentYear) option.selected = true;
+        yearSelect.appendChild(option);
+    }
+
+    function renderCalendar() {
+        daysContainer.innerHTML = "";
+        monthYear.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        // empty spaces
+        for (let i = 0; i < firstDay; i++) {
+            daysContainer.innerHTML += "<div></div>";
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+            const paddedDay = String(day).padStart(2, '0');
+            const paddedMonth = String(currentMonth + 1).padStart(2, '0');
+            const dateStr = `${currentYear}-${paddedMonth}-${paddedDay}`;
+
+            const div = document.createElement("div");
+            div.classList.add("day");
+            div.innerText = day;
+
+            // highlight today
+            if (
+                day === today.getDate() &&
+                currentMonth === today.getMonth() &&
+                currentYear === today.getFullYear()
+            ) {
+                div.classList.add("today");
+            }
+
+            if (selectedDates.includes(dateStr)) {
+                div.classList.add("selected");
+            }
+
+            div.onclick = () => toggleDate(dateStr, div);
+
+            daysContainer.appendChild(div);
+        }
+    }
+
+    function toggleDate(dateStr, element) {
+        if (selectedDates.includes(dateStr)) {
+            selectedDates = selectedDates.filter(d => d !== dateStr);
+            element.classList.remove("selected");
+        } else {
+            selectedDates.push(dateStr);
+            element.classList.add("selected");
+        }
+
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        selectedDatesDiv.innerText = selectedDates.join(", ");
+    }
+
+    function changeMonth(direction) {
+        currentMonth += direction;
+
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+
+        yearSelect.value = currentYear;
+        renderCalendar();
+    }
+
+    function changeYear() {
+        currentYear = parseInt(yearSelect.value);
+        renderCalendar();
+    }
+
+    function sendToServer() {
+        console.log("Sending:", selectedDates);
+
+        fetch("https://your-server-api.com/save-dates", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ dates: selectedDates })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert("Data sent successfully!");
+            console.log(data);
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error sending data");
+        });
+    }
+
+    renderCalendar();
+</script>
+
+</body>
+</html>
