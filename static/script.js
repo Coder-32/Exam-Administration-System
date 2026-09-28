@@ -624,7 +624,7 @@ async function triggerEmergencyReschedule() {
         return;
     }
     
-    if (!confirm(`This will read the selected schedule from the PostgreSQL database, LOCK all assignments prior to ${date}, remove ${person} from all assignments on or after ${date}, and rebalance the rest. Proceed?`)) {
+    if (!confirm(`This will read the selected schedule from the database, LOCK all assignments prior to ${date}, remove ${person} from all assignments on or after ${date}, and rebalance the rest. Proceed?`)) {
         return;
     }
     

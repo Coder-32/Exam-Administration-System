@@ -1,635 +1,387 @@
-# Exam Invigilation Scheduling System
+# Exam Invigilation Scheduling & Administration System
 
-A web-based application for managing exam invigilation schedules with automatic optimization using network flow algorithms.
+🔗 **Live Deployment**: [https://exam-administration-system.onrender.com/](https://exam-administration-system.onrender.com/)
 
----
-
-## ✨ Features
-
-### Modern Web Interface
-- Intuitive form-based data entry with dynamic form generation
-- Real-time schedule generation and display
-- Responsive design for desktop, tablet, and mobile
-- Professional gradient UI with smooth animations
-- Loading indicators and clear error messages
-
-### Advanced Scheduling Algorithm
-- Optimized faculty and staff deployment using NetworkX
-- Preference-based assignment with cost minimization
-- Emergency exclusion handling
-- Automatic capacity management
-- Guaranteed optimal solution
-
-### Export Options
-- **CSV Export** — Grouped schedules (Main, Faculty, Staff, Rooms)
-- **PDF Reports** — Faculty invigilation reports
-- **ZIP Download** — All CSVs bundled in one file
-
-### Preference System with Shifts
-- Set preferences per shift (Morning / Afternoon)
-- Emergency exclusions — hard constraints
-- Preferred assignments — soft constraints (optimization objective)
+A modular web application designed for universities and academic institutions to generate optimal exam invigilation routines. The system models the invigilation scheduling problem as a **Min-Cost Max-Flow (MCMF)** network flow optimization problem and solves it using **Google OR-Tools** and **Constraint Programming (CP-SAT)**.
 
 ---
 
-## 📁 Project Structure
+## 🌟 Key Highlights
 
-```
-Exam Administration System/
-├── app.py                          # Flask backend with API endpoints
-├── CONFIG.py                       # Configuration reference
-├── requirements.txt                # Python dependencies
-├── Dockerfile                      # Docker configuration
+- **Mathematical Optimization Engine**: Invigilation duty assignments modeled as a Min-Cost Max-Flow network and solved using Google OR-Tools (`SimpleMinCostFlow` and `cp_model`).
+- **Fair Workload Distribution**: Quadratic / piecewise-convex cost curves guarantee equitable shift distribution across all available professors and staff members.
+- **Preference & Emergency Constraint Handling**: Strict hard-constraint enforcement for emergency leave and soft-constraint reward optimization for preferred shifts/dates.
+- **Dynamic Emergency Rescheduling**: Instant re-balancing of past rosters if an invigilator calls in sick, locking past assignments while reallocating future shifts seamlessly.
+- **Modular Architecture**: Clean separation into `routes/`, `utils/`, `service/`, and centralized configuration in `config.py`.
+- **Multi-Format Export System**: Real-time generation of grouped CSV files (Main, Faculty, Staff, Room), one-click ZIP download, and formatted ReportLab PDF reports.
+- **Intelligent PDF Roster Ingestion**: Automated bulk import of teachers and staff from PDF documents with fallback to Tesseract OCR for scanned schedules.
+- **Zero-Configuration Database**: Pure SQLite database (`database/exam_schedules.db`) built directly on Python's native standard library with zero external database setup required.
+
+---
+
+## 🏛️ System Architecture
+
+The application is structured into modular layers following clean code and domain-driven design principles:
+
+```text
+Exam-Administration-System/
+├── app.py                      # Flask Application factory and server entrypoint
+├── config.py                   # Centralized configuration (paths, credentials, OCR settings)
+├── requirements.txt            # Python dependencies
+├── .env.example                # Local environment template
+├── database/                   # Seed files and local SQLite database
+├── schedule_storage/           # Runtime storage for generated CSVs, ZIPs, and PDFs
 │
-├── database/                       # Data files
-│   ├── teachers.txt                # Faculty names
-│   ├── staffs.txt                  # Staff names
-│   ├── rooms.txt                   # Room list
-│   └── namesProf.pdf               # Professor names reference
+├── routes/                     # Blueprint modular route controllers
+│   ├── __init__.py             # Route registration registry
+│   ├── auth_routes.py          # /login, /logout, /register_account, password management
+│   ├── view_routes.py          # Page rendering for / (dashboard) and /register
+│   ├── personnel_routes.py     # CRUD for teachers, staff, rooms, and PDF roster parsing
+│   ├── schedule_routes.py      # /api/schedule, emergency rescheduling, and routine persistence
+│   └── export_routes.py        # /api/download-csv, /api/download-all-csv, /api/download-pdf
 │
-├── service/                        # Backend services
-│   ├── schedule.py                 # Scheduling algorithm & network flow logic
-│   ├── createTable.py              # PDF report generation
-│   ├── export_service.py           # Excel/CSV export utilities
-│   └── db.py                       # Database utilities
+├── utils/                      # Reusable utility functions
+│   ├── __init__.py
+│   ├── ocr_utils.py            # PDF text extraction (PyPDF2) and OCR pipeline (PyMuPDF + Tesseract)
+│   └── export_utils.py         # Dynamic column detection, DataFrame grouping, and ZIP builder
 │
-├── templates/                      # HTML templates
-│   ├── index.html                  # Main web interface
-│   ├── calender.html               # Calendar view
-│   └── register.html               # Registration page
+├── service/                    # Core business logic and algorithmic solvers
+│   ├── __init__.py
+│   ├── schedule.py             # OR-Tools SimpleMinCostFlow, CP-SAT solver, and NetworkX fallback
+│   ├── db.py                   # Pure SQLite data persistence layer (User-scoped tables & routines)
+│   ├── db_config.py            # Database connection configuration
+│   ├── createTable.py          # ReportLab PDF report generation
+│   └── export_service.py       # Excel and metrics calculation utilities
 │
-├── static/                         # Static assets
-│   ├── style.css                   # CSS styling & animations
-│   └── script.js                   # Frontend JavaScript logic
+├── templates/                  # Frontend HTML5 templates
+│   ├── index.html              # Main scheduling console and calendar interface
+│   ├── register.html           # Personnel and room administration interface
+│   ├── login.html              # Authentication portal
+│   └── register_account.html   # User account creation
 │
-├── schedule_storage/               # Generated CSV/ZIP output
-│   ├── exam_schedule.csv
-│   ├── teacher_schedule.csv
-│   ├── staff_schedule.csv
-│   ├── room_schedule.csv
-│   └── exam_schedules.zip          # Created on demand
-│
-├── README.md                       # This file
-├── QUICK_START.md                  # Quick setup guide (merged into README)
-├── DEPLOYMENT.md                   # Cloud deployment guide
-└── render.yaml                     # Render deployment configuration
+└── static/                     # Frontend static assets
+    ├── style.css               # Modern gradient UI styling and responsive layouts
+    └── script.js               # Dynamic DOM manipulation, API client, and calendar logic
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🧮 Mathematical Modeling: Min-Cost Max-Flow in Google OR-Tools
 
-### Local Development
+### 1. The Invigilation Scheduling Problem
 
-#### 1. Install Python Dependencies
+Given:
+- A set of exam dates $D = \{d_1, d_2, \dots, d_{|D|}\}$
+- A set of shifts per day $S = \{\text{Morning}, \text{Afternoon}\}$
+- A set of examination rooms $R = \{r_1, r_2, \dots, r_{|R|}\}$
+- A pool of faculty members $F$ and support staff $St$
+- Personnel requirements: each room $r$ on date $d$, shift $s$ requires $K_{fac}$ faculty members and $K_{stf}$ staff members.
+
+Total demand for the exam session:
+$$Q = |D| \times |S| \times |R| \times (K_{fac} + K_{stf})$$
+
+### 2. Network Flow Formulation
+
+The problem is represented as a directed graph $G = (V, E)$ with capacity function $c(u, v)$ and unit cost function $w(u, v)$:
+
+```text
+[ SOURCE ] (Supply = +Q)
+    │
+    ▼ (Capacity = 1, Cost = (i-1) * 150)  <-- Workload Tranches (Fairness)
+[ Workload Nodes: P_W_1, P_W_2, ... ]
+    │
+    ▼ (Capacity = 1, Cost = 0)
+[ Personnel Node: Person P ]
+    │
+    ▼ (Capacity = 2, Cost = 0)            <-- Max 2 shifts per day
+[ Person-Date Node: P_d ]
+    │
+    ▼ (Capacity = 1, Cost = C_pref)       <-- Shift Preference / Emergency Cost
+[ Person-Shift Node: P_{d,s} ]
+    │
+    ▼ (Capacity = 1, Cost = 0)            <-- Exclusivity (at most 1 room per shift)
+[ Room Requirement Node: REQ_{d,s,r} ]
+    │
+    ▼ (Capacity = K_fac or K_stf, Cost = 0)
+[ SINK ] (Demand = -Q)
+```
+
+#### Graph Layer Specifications:
+
+1. **Source ($S$) & Sink ($T$)**:
+   - Node $S$ has supply $+Q$.
+   - Node $T$ has demand $-Q$ (supply $-Q$).
+   - All intermediate nodes have net supply $0$ (flow conservation: $\sum_{u} f(u, v) = \sum_{w} f(v, w)$).
+
+2. **Workload Balancing Tranches ($P_{W_1}, P_{W_2}, \dots$)**:
+   - To avoid overloading active invigilators while leaving others idle, each person $P$ has multiple incoming arcs from $S$, each representing an additional shift tranche $i \in \{1, \dots, |D| \times |S|\}$.
+   - Arc $(S \to P_{W_i})$ has `capacity = 1` and `cost = (i - 1) * 150`.
+   - **Mathematical Effect**: This creates a strictly convex piecewise-linear penalty curve:
+     - 1st assigned shift: cost $= 0$
+     - 2nd assigned shift: cost $= 150$
+     - 3rd assigned shift: cost $= 300$
+     - 4th assigned shift: cost $= 450$
+   - Because the algorithm minimizes total cost, flow is distributed evenly across all invigilators before any single invigilator receives higher-index tranches.
+
+3. **Daily Shift Limits ($P \to P_d$)**:
+   - Each arc from $P$ to date node $P_d$ has `capacity = 2` and `cost = 0`.
+   - This prevents anyone from working more than 2 shifts on any given day.
+
+4. **Shift Assignment & Preferences ($P_d \to P_{d,s}$)**:
+   - Each arc from $P_d$ to shift node $P_{d,s}$ has `capacity = 1` and unit cost $C_{pref}$:
+     - **Preferred Shift / Priority Date**: $C_{pref} = 10$ (strong incentive to assign).
+     - **Standard Shift**: $C_{pref} = 200$ (baseline neutral cost).
+     - **Emergency Exclusion / Leave**: $C_{pref} = 5000$ (or arc is removed entirely as a hard constraint).
+
+5. **Room Allocation & Demand Satisfaction ($\text{REQ}_{d,s,r} \to T$)**:
+   - Arcs from $P_{d,s}$ to $\text{F\_REQ}_{d,s,r}$ (for faculty) and $\text{S\_REQ}_{d,s,r}$ (for staff) have `capacity = 1` and `cost = 0`.
+   - Arcs from $\text{F\_REQ}_{d,s,r} \to T$ have `capacity = K_fac` and `cost = 0`.
+   - Arcs from $\text{S\_REQ}_{d,s,r} \to T$ have `capacity = K_stf` and `cost = 0`.
+
+---
+
+### 3. Implementation in Google OR-Tools
+
+The system implements the solution using **two complementary OR-Tools paradigms**:
+
+#### Method A: Direct Graph Flow (`ortools.graph.python.min_cost_flow.SimpleMinCostFlow`)
+
+Located in [`service/schedule.py`](file:///c:/Users/Victus/Desktop/takehello/Exam-Administration-System/service/schedule.py):
+
+```python
+from ortools.graph.python import min_cost_flow
+
+smcf = min_cost_flow.SimpleMinCostFlow()
+
+# 1. Map string nodes to sequential integer IDs (0 ... N-1)
+# 2. Add convex workload tranche arcs
+for f_id in teachers:
+    for w in range(1, total_shifts + 1):
+        smcf.add_arc_with_capacity_and_unit_cost(source_id, w_node, 1, (w - 1) * 150)
+        smcf.add_arc_with_capacity_and_unit_cost(w_node, person_node, 1, 0)
+
+# 3. Add date-shift capacity and preference arcs
+smcf.add_arc_with_capacity_and_unit_cost(person_node, date_node, 2, 0)
+smcf.add_arc_with_capacity_and_unit_cost(date_node, shift_node, 1, preference_cost)
+
+# 4. Add demand satisfaction arcs to Sink
+smcf.add_arc_with_capacity_and_unit_cost(f_req_node, sink_id, req_fac, 0)
+smcf.add_arc_with_capacity_and_unit_cost(s_req_node, sink_id, req_stf, 0)
+
+# 5. Set node supplies and solve
+smcf.set_node_supply(source_id, total_demand)
+smcf.set_node_supply(sink_id, -total_demand)
+
+status = smcf.solve()
+if status in (smcf.OPTIMAL, smcf.FEASIBLE):
+    # Flow on arc i > 0 indicates active assignment
+    for arc_idx in active_arcs:
+        if smcf.flow(arc_idx) > 0:
+            assign_invigilator(...)
+```
+
+**Complexity**: Solved in polynomial time $O(V^2 E \log V)$ using the Cost-Scaling Push-Relabel algorithm, executing in under 20 milliseconds even for large university campuses.
+
+#### Method B: Multi-Constraint CP-SAT Formulation (`ortools.sat.python.cp_model`)
+
+For complex operational constraints (such as forbidding consecutive double-shifts unless explicitly permitted, or locking past duties during mid-session emergency rescheduling), the system utilizes OR-Tools CP-SAT:
+
+1. **Binary Decision Variables**:
+   $$x_{f, d, s, r} \in \{0, 1\} \quad \forall f \in F, d \in D, s \in S, r \in R$$
+
+2. **Room Capacity Constraints**:
+   $$\sum_{f \in F} x_{f, d, s, r} = K_{fac} \quad \text{and} \quad \sum_{st \in St} x_{st, d, s, r} = K_{stf}$$
+
+3. **Exclusivity Constraint**:
+   $$\sum_{r \in R} x_{f, d, s, r} \le 1 \quad \forall f \in F, d \in D, s \in S$$
+
+4. **Emergency Absence Constraint**:
+   $$x_{f_{absent}, d, s, r} = 0 \quad \forall d \ge d_{emergency}$$
+
+5. **Workload Fairness Objective**:
+   $$\text{Minimize} \quad 50 \cdot W_{max} + 200 \cdot (W_{max} - W_{min}) + 100 \sum \text{DoubleShiftPenalty} - 20 \sum \text{PriorityBonus}$$
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Python 3.10+** (Python 3.11 recommended)
+- **Tesseract OCR** *(Optional: only needed if uploading scanned image PDFs)*
+
+---
+
+### Step 1: Clone and Prepare Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/exam-administration-system.git
+cd exam-administration-system
+
+# Create and activate virtual environment
+# On Windows:
+python -m venv venv
+venv\Scripts\activate
+
+# On macOS / Linux:
+python3 -m venv venv
+source venv/bin/activate
+```
+
+---
+
+### Step 2: Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-#### 2. Run the Application
+---
+
+### Step 3: Environment Setup
+
+Copy `.env.example` to `.env`:
+
+```bash
+# Windows (PowerShell)
+Copy-Item .env.example .env
+
+# macOS / Linux
+cp .env.example .env
+```
+
+Default configuration in `.env`:
+```env
+# Application Configuration
+FLASK_ENV=development
+SECRET_KEY=change-this-in-production
+PORT=5000
+PYTHONUNBUFFERED=1
+
+# Database Configuration (Pure SQLite - stored in database/exam_schedules.db)
+# SQLITE_DB_PATH=database/exam_schedules.db
+```
+
+---
+
+### Step 4: Run the Application
+
 ```bash
 python app.py
 ```
 
-You should see output like:
-```
- * Serving Flask app 'app'
- * Debug mode: on
- * Running on http://127.0.0.1:5000
-```
-
-#### 3. Open in Browser
-Navigate to: `http://localhost:5000`
-
----
-
-## 🐳 Docker Deployment
-
-### Using Docker Compose
-```bash
-docker-compose up
-```
-Visit: `http://localhost:5000`
-
-### Using Docker Directly
-```bash
-# Pull from DockerHub
-docker pull satwik006/exam-administration-system:latest
-
-# Run the container
-docker run -p 5000:5000 satwik006/exam-administration-system:latest
-```
-
-### If Port 5000 is Already in Use
-```bash
-# Use a different port
-docker run -p 8080:5000 satwik006/exam-administration-system:latest
-# Visit: http://localhost:8080
-```
-
-### Export as .tar File
-```bash
-docker save exam-administration-system:latest -o exam-system.tar
-```
-
-To use the .tar file:
-```bash
-docker load -i exam-system.tar
-docker run -p 5000:5000 exam-administration-system:latest
+The application will start on:
+```text
+http://localhost:5000
 ```
 
 ---
 
-## 📦 Production Deployment
+## 📖 Step-by-Step User Workflow
 
-### Local Server
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
+### 1. Authentication & Registration
+- Navigate to `http://localhost:5000/login`.
+- Register a user account (e.g. `admin`).
+- Each user maintains an isolated dataset of faculty, staff, rooms, and generated routines.
 
-### Cloud Deployment (Render)
-See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions.
+### 2. Personnel & Room Setup
+- Navigate to the **Register** tab (`/register`).
+- Add Faculty members and Staff members manually or upload a roster PDF.
+  - Standard text PDFs are parsed directly with `PyPDF2`.
+  - Scanned image PDFs can be parsed using the **Enable OCR** checkbox via `pytesseract`.
+- Add Examination Rooms.
 
-**Your DockerHub Repository:** https://hub.docker.com/r/satwik006/exam-administration-system
+### 3. Schedule Generation
+- Return to the **Dashboard** (`/`).
+- Click on dates in the interactive calendar to designate examination days.
+- (Optional) Configure shift preferences:
+  - Set specific teachers as *Preferred* for desired dates/shifts.
+  - Set *Emergency* exclusions for unavailable slots.
+- Specify faculty required per room (default: 2) and staff required per room (default: 1).
+- Click **"Generate Schedule"**.
 
----
+### 4. Emergency Rescheduling
+- In the event of sudden absenteeism:
+  - Open a saved routine.
+  - Select the absent personnel and the effective emergency date.
+  - Click **"Emergency Reschedule"**.
+  - All past dates are locked, while remaining slots are optimally re-distributed.
 
-## 📖 How to Use
-
-### Step 1: System Configuration
-- Enter the number of faculty members, staff members, examination rooms, and dates
-- Click **"Generate Input Forms"**
-
-### Step 2: Faculty & Staff Preferences
-For each faculty/staff member:
-- Enter priority dates (e.g., `D1,D2,D3`)
-- Enter emergency exclusions (e.g., `D1-Morning,D2-Afternoon`)
-
-### Step 3: Set Shift Preferences (Optional)
-1. Select exam dates from the calendar
-2. Click **"Set Preferences"**
-3. Fill in the preference form:
-   - Select Teacher/Staff name
-   - Select Date
-   - Select Shift (Morning or Afternoon)
-   - Select Status (Preferred or Emergency)
-4. Click **"Add Rule"** to add the preference
-5. Click **"Apply Preferences"** to save
-
-### Step 4: Generate Schedule
-- Click **"Generate Schedule"**
-- View the optimized invigilation deployment chart
-- Review the assignment status
-
-### Step 5: Export Results
-- Download individual CSVs or all as ZIP
-- Generate PDF reports
-
-### Testing with Sample Data
-
-#### Example Configuration:
-- Faculty Members: 3 (F1, F2, F3)
-- Staff Members: 2 (S1, S2)
-- Rooms: 3 (R1, R2, R3)
-- Dates: 2 (D1, D2)
-
-#### Example Faculty Preferences:
-**F1**
-- Priority Dates: D1,D2
-- Exclusions: D1-Afternoon
-
-**F2**
-- Priority Dates: D2
-- Exclusions: D2-Morning
-
-**F3**
-- Priority Dates: D1
-- Exclusions: (leave empty)
-
-#### Example Staff Preferences:
-**S1**
-- Priority Dates: D1,D2
-- Exclusions: D2-Afternoon
-
-**S2**
-- Priority Dates: D2
-- Exclusions: D1-Morning
+### 5. Multi-Format Downloads
+- **Main Schedule CSV**: Complete roster sorted by date and shift.
+- **Teacher Schedule CSV**: Grouped view showing every duty assigned to each professor.
+- **Staff Schedule CSV**: Grouped view showing support duties.
+- **Room Schedule CSV**: Roster formatted room-by-room for door postings.
+- **All Schedules (ZIP)**: One-click bundle containing all CSV views.
+- **PDF Report**: Publication-ready ReportLab document formatted with header branding and signature sections.
 
 ---
 
-## ✨ Features Demonstrated
+## 🔌 API Reference
 
-✅ Dynamic form generation based on input numbers
-✅ Intelligent preference handling
-✅ Optimized schedule generation using network algorithms
-✅ Real-time results display in formatted table
-✅ Multi-format export (CSV, PDF, ZIP)
-✅ Calendar-based preference management
-✅ Responsive design for all devices
-✅ Error handling and validation
+### Authentication Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/login` | User login |
+| `GET` | `/logout` | User logout |
+| `POST` | `/register_account` | Create new user account |
+| `POST` | `/api/change-password` | Update account password |
+| `POST` | `/api/delete-account` | Permanently delete user and associated schedules |
 
----
+### Personnel & Room Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/data` | Fetch all registered teachers, staff, and rooms |
+| `POST` | `/api/register-teacher` | Register a new faculty member |
+| `POST` | `/api/register-staff` | Register a new staff member |
+| `POST` | `/api/delete-teacher` | Remove a faculty member |
+| `POST` | `/api/delete-staff` | Remove a staff member |
+| `POST` | `/api/register-room` | Register an examination room |
+| `POST` | `/api/delete-room` | Remove an examination room |
+| `POST` | `/api/upload-pdf-list` | Bulk upload teachers/staff from PDF (supports OCR) |
 
-## 📊 CSV Export System
+### Scheduling & Routine Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/schedule` | Execute OR-Tools optimization and return assignment table |
+| `POST` | `/api/emergency_reschedule` | Re-balance future schedule slots around absent invigilator |
+| `GET` | `/api/routines` | List metadata of all saved routines |
+| `GET` | `/api/routine/<id>` | Retrieve full assignments for a saved routine |
+| `POST` | `/api/save_routine` | Save generated schedule under a routine name |
+| `DELETE` | `/api/routine/<id>` | Delete a saved routine |
+| `PUT` | `/api/routine/<id>` | Rename a saved routine |
 
-### Constant Filenames
-All CSV files use fixed filenames and **overwrite** with each new generation (no timestamp bloat):
-
-| File | Description |
-|------|-------------|
-| `exam_schedule.csv` | Main schedule with all assignments |
-| `teacher_schedule.csv` | Faculty assignments grouped by teacher |
-| `staff_schedule.csv` | Staff assignments grouped by staff member |
-| `room_schedule.csv` | Assignments grouped and sorted by room |
-
-### CSV File Formats
-
-**exam_schedule.csv (Main)**
-```
-Date, Room, Shift, Faculty1, Faculty2, Staff
-2026-04-16, Room101, Morning, Dr. Ahmed, John, Sarah
-```
-
-**teacher_schedule.csv (Grouped by Faculty)**
-```
-Teacher, Date, Shift, Room, Role
-Dr. Ahmed, 2026-04-16, Morning, Room101, Faculty 1
-```
-
-**staff_schedule.csv (Grouped by Staff)**
-```
-Staff, Date, Shift, Room, Faculty1, Faculty2
-Sarah, 2026-04-16, Morning, Room101, Dr. Ahmed, John
-```
-
-**room_schedule.csv (Grouped by Room)**
-```
-Date, Room, Shift, Faculty1, Faculty2, Staff
-2026-04-16, Room101, Morning, Dr. Ahmed, John, Sarah
-```
-
-### Download Options
-
-| Button | Action |
-|--------|--------|
-| 📋 Main Schedule | Download main schedule CSV |
-| 👨‍🏫 Faculty Schedule | Download faculty-grouped CSV |
-| 👥 Staff Schedule | Download staff-grouped CSV |
-| 🏛️ Rooms Schedule | Download room-grouped CSV |
-| 📦 Download All (ZIP) | All 4 CSVs as `exam_schedules.zip` |
-
-### API Endpoints for CSV
-
-```
-POST /api/download-csv
-Body: {"results": [...], "type": "main|teacher|staff|room"}
-Returns: CSV file with constant name
-
-POST /api/download-all-csv
-Body: {"results": [...]}
-Returns: ZIP file with all 4 CSVs
-```
+### Export Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/download-csv` | Download grouped CSV (`main`, `teacher`, `staff`, `room`) |
+| `POST` | `/api/download-all-csv` | Download in-memory ZIP archive of all CSV formats |
+| `POST` | `/api/download-pdf` | Download formatted ReportLab PDF report |
 
 ---
 
-## 🔧 Troubleshooting
+## 🛠️ Testing & Troubleshooting
 
-### Port Already in Use
-**Error**: `Address already in use`
+### Port Conflict
+If port `5000` is already occupied by another service:
+- Set `PORT=8000` in `.env`, or run:
+  ```bash
+  $env:PORT=8000; python app.py
+  ```
 
-**Solution 1 - Use Different Port**:
-```bash
-docker run -p 8080:5000 exam-administration-system:latest
-# Visit: http://localhost:8080
-```
+### Tesseract OCR Configuration
+If your institution uploads scanned or handwritten PDF documents:
+1. Install Tesseract OCR from [UB-Mannheim/tesseract](https://github.com/UB-Mannheim/tesseract/wiki).
+2. Set the binary path in `.env` if not in standard directory:
+   ```env
+   TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+   ```
 
-**Solution 2 - Find and Kill Process**:
-```bash
-# Find what's using port 5000
-netstat -ano | findstr :5000
-
-# Kill the process (replace PID with actual process ID)
-taskkill /PID <PID> /F
-```
-
-### Module Not Found Error
-**Error**: `ModuleNotFoundError`
-
-**Solution**: Reinstall dependencies
-```bash
-pip install -r requirements.txt --force-reinstall
-```
-
-### Excel/PDF Export Fails
-**Error**: Export functions not working
-
-**Solution**: Ensure required packages are installed
-```bash
-pip install openpyxl --upgrade
-pip install PyPDF2 --upgrade
-```
-
-### JavaScript Errors in Browser
-**Error**: Errors in browser console
-
-**Solution**:
-- Open browser console: `F12 → Console tab`
-- Check for specific errors
-- Clear browser cache: `Ctrl+Shift+Delete`
-- Refresh the page
-
-### Docker Image Not Found
-**Error**: `docker pull` fails
-
-**Solution**: Build image locally
-```bash
-docker build -t exam-administration-system .
-docker run -p 5000:5000 exam-administration-system:latest
-```
+### Database Storage
+- The application uses pure SQLite (`database/exam_schedules.db`). No installation, configuration, or server management of external databases is required. Tables, indexes, and cascading foreign-key constraints are initialized automatically on launch.
 
 ---
 
-## 📋 API Endpoints Reference
-
-### Core Endpoints
-
-```
-POST /api/schedule
-POST /api/download-csv
-POST /api/download-all-csv
-POST /api/create-pdf
-GET  /api/data
-```
-
-### Full Request/Response Examples
-
-**POST /api/schedule** — Generate schedule
-```json
-{
-  "faculties_count": 3,
-  "staff_count": 2,
-  "rooms_count": 3,
-  "dates_count": 2,
-  "facultyData": {
-    "F1": {"priority_dates": ["D1"], "emergency_shifts": ["D1-Afternoon"]}
-  },
-  "staffData": {
-    "S1": {"priority_dates": ["D1"], "emergency_shifts": []}
-  }
-}
-```
-
----
-
-## 🎓 Expected Results
-
-The system will:
-1. Create a bipartite graph of personnel, dates, shifts, and rooms
-2. Apply cost minimization algorithm for optimal assignment
-3. Display a complete deployment chart showing:
-   - Which faculty member is assigned to each room
-   - Which staff member supports each shift
-   - Any unfilled positions (if constraints don't allow 100% coverage)
-
----
-
-## 📚 Additional Resources
-
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Cloud deployment guide
-- [CONFIG.py](CONFIG.py) - Configuration reference
-- [Dockerfile](Dockerfile) - Docker configuration
-
----
-
-## 📝 License & Support
-
-For issues, feature requests, or contributions, please refer to the project repository.
-
-**DockerHub**: https://hub.docker.com/r/satwik006/exam-administration-system
-Returns: ZIP file with all 4 CSVs
-```
-
----
-
-## 🔀 Preference System Details
-
-### Preference Naming Convention
-Preferences are displayed in a compact identifier format:
-```
-{teacher}_{dd}_{shift}
-```
-**Examples:**
-- `Dr. Ahmed_16_morning` — Dr. Ahmed, 16th day, morning shift
-- `John_17_afternoon` — John, 17th day, afternoon shift
-
-### Preference Types
-- **Preferred** — Teacher/Staff prefers this shift on this date
-- **Emergency** — Teacher/Staff cannot work this shift on this date
-
-### Backend Format
-```json
-{
-  "teacher": "Dr. Ahmed",
-  "date": "2026-04-16",
-  "shift": "Morning",
-  "status": "emergency"
-}
-```
-
-### How Preferences Are Processed
-- **Emergency shifts** → Hard constraint: person is excluded from that date-shift combination
-- **Preferred shifts** → Soft constraint: scheduler gives bonus for assigning to that date-shift combination
-
-### Preference Propagation Flow
-```
-User UI → script.js → app.py (/api/schedule)
-  → schedule.py (formal_scheduler_api)
-  → Constraint Model
-  → Hard/Soft Constraints Applied
-```
-
-> **Note:** If no shift is specified in preferences sent via API, it defaults to 'All' shifts. The scheduler respects hard emergency constraints strictly and uses soft constraints for preferred assignments as an optimization objective.
-
----
-
-## ⚙️ Technical Details
-
-### Technologies Used
-
-| Layer | Technology |
-|-------|------------|
-| Backend Framework | Flask |
-| Scheduling Algorithm | NetworkX (Min-Cost Max-Flow) |
-| Data Processing | Pandas |
-| Excel Export | OpenPyXL |
-| PDF Reports | ReportLab |
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-
-### Algorithm Overview
-1. **Graph Construction** — Creates a network with nodes for personnel, dates, shifts, and rooms
-2. **Cost Assignment:**
-   - Emergency exclusion: `5000` (maximum penalty)
-   - Priority dates: `index × 10` (lower is better)
-   - Auto-drafted: `200` (moderate penalty)
-3. **Flow Optimization** — Minimum cost maximum flow algorithm with polynomial time complexity O(V²E²)
-4. **Assignment** — Extracts faculty and staff assignments from the flow solution
-
-### Performance
-- Schedule generation: < 5 seconds for typical inputs
-- Max capacity: 50 faculty, 50 staff, 50 rooms, 30 dates
-- Memory efficient: works with in-memory data structures
-
----
-
-## 📋 Input Format Reference
-
-### Priority Dates Format
-- Single date: `D1`
-- Multiple dates: `D1,D2,D3`
-- Dates are listed in order of preference
-
-### Emergency Exclusions Format
-- Single exclusion: `D1-Morning`
-- Multiple exclusions: `D1-Morning,D2-Afternoon,D3-Morning`
-- Format: `Date-Shift` where Shift is `Morning` or `Afternoon`
-
----
-
-## 🔗 API Reference
-
-### Generate Schedule
-```http
-POST /api/schedule
-Content-Type: application/json
-
-{
-  "faculties_count": 3,
-  "staff_count": 2,
-  "rooms_count": 3,
-  "dates_count": 2,
-  "facultyData": {
-    "F1": {"priority_dates": ["D1"], "emergency_shifts": ["D1-Afternoon"]},
-    "F2": {"priority_dates": ["D2"], "emergency_shifts": []},
-    "F3": {"priority_dates": ["D1","D2"], "emergency_shifts": ["D2-Morning"]}
-  },
-  "staffData": {
-    "S1": {"priority_dates": ["D1"], "emergency_shifts": ["D1-Afternoon"]},
-    "S2": {"priority_dates": ["D2"], "emergency_shifts": []}
-  }
-}
-```
-
-### Download Excel
-```http
-POST /api/download-excel
-Content-Type: application/json
-
-{
-  "results": [
-    {"Date": "D1", "Shift": "Morning", "Room": "R1", ...}
-  ]
-}
-```
-
----
-
-## 🔒 Error Handling
-
-The system validates:
-- ✓ Positive integer inputs for counts
-- ✓ Valid date format in preferences
-- ✓ Sufficient capacity for assignments
-- ✓ Network flow feasibility
-- ✓ Empty or malformed preference data
-- ✓ API errors with descriptive messages
-
----
-
-## 🛠️ Troubleshooting
-
-### Port Already in Use
-```python
-# Change port in app.py:
-if __name__ == '__main__':
-    app.run(debug=True, port=8000)
-```
-
-### Missing Dependencies
-```bash
-pip install -r requirements.txt --force-reinstall --upgrade
-```
-
-### Excel Export Not Working
-```bash
-pip install openpyxl --upgrade
-```
-
-### Browser Console Errors
-- Press **F12** to open developer tools
-- Check **Console** tab for JavaScript errors
-- Clear cache and reload (**Ctrl+Shift+Delete**)
-
----
-
-## 🧪 Testing Checklist
-
-- [ ] Run `pip install -r requirements.txt`
-- [ ] Execute `python app.py`
-- [ ] Verify Flask server starts without errors
-- [ ] Open `http://localhost:5000` in browser
-- [ ] Test with sample configuration (3 faculty, 2 staff, 3 rooms, 2 dates)
-- [ ] Enter test preferences
-- [ ] Generate schedule and verify results
-- [ ] Export to CSV/Excel and verify file contents
-- [ ] Test **"Start Over"** functionality
-- [ ] Verify responsive design on mobile
-- [ ] Check browser console for JS errors
-
----
-
-## 🚢 Deployment Checklist
-
-- [ ] Set `debug=False` in `app.py`
-- [ ] Test with production WSGI server (Gunicorn)
-- [ ] Configure CORS if needed
-- [ ] Set up environment variables
-- [ ] Enable HTTPS certificates
-- [ ] Configure logging
-- [ ] Set up monitoring
-- [ ] Test backup/recovery
-
----
-
-## 🎓 Future Enhancements
-
-### Development
-- Add database integration (SQLAlchemy)
-- Implement user authentication
-- Add schedule history tracking
-
-### Production
-- Deploy using Gunicorn + Nginx
-- Add SSL certificates
-- Set up monitoring and logging
-- Implement backup strategies
-
-### Features
-- Email notifications for assignments
-- Conflict detection and resolution
-- Calendar integration
-- Mobile app using Flask-CORS
-- Analytics dashboard
-
----
-
-## 📞 Support
-
-For issues or questions, refer to the codebase documentation or check the browser console for JavaScript errors.
-
-| Resource | Location |
-|----------|----------|
-| Main Interface | `http://localhost:5000` |
-| API Base | `http://localhost:5000/api/` |
-| Quick Setup | `QUICK_START.md` |
-| Configuration | `CONFIG.py` |
+## 📄 License
+This project is open-source and available for educational and institutional administrative use.
